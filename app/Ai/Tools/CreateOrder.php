@@ -65,7 +65,7 @@ class CreateOrder implements Tool
             'location' => $schema->object(fn ($schema) => [
                 'latitude' => $schema->number()->required(),
                 'longitude' => $schema->number()->required(),
-            ])->nullable(),
+            ])->nullable()->required(),
         ];
     }
 }
