@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Ai\Agents\SalesAgent;
 use App\Models\Order;
+use App\Support\TwilioWhatsAppPayload;
+use Illuminate\Http\Request;
 use Twilio\Rest\Client;
 
 class WhatsAppService
@@ -12,8 +14,9 @@ class WhatsAppService
 
     protected string $fromNumber;
 
-    public function __construct()
-    {
+    public function __construct(
+        protected TwilioWhatsAppAudioTranscriptionService $audioTranscription,
+    ) {
         $this->twilio = new Client(
             config('services.twilio.account_sid'),
             config('services.twilio.auth_token')
@@ -48,7 +51,34 @@ class WhatsAppService
         return 'whatsapp:+'.ltrim($digits, '+');
     }
 
-    public function processMessage(string $from, string $message): string
+    /**
+     * Build user-visible text for the agent from an inbound webhook (text, transcribed audio, or location pin).
+     */
+    public function inboundTextForAgent(Request $request): string
+    {
+        return match (TwilioWhatsAppPayload::effectiveMessageType($request)) {
+            'audio' => $this->transcribeInboundAudio($request),
+            'location' => TwilioWhatsAppPayload::locationAsAgentPrompt($request),
+            default => TwilioWhatsAppPayload::messageBody($request),
+        };
+    }
+
+    /**
+     * @throws \RuntimeException
+     */
+    public function transcribeInboundAudio(Request $request): string
+    {
+        $url = TwilioWhatsAppPayload::firstMediaUrl($request);
+        if ($url === null) {
+            throw new \RuntimeException('Audio message missing MediaUrl0.');
+        }
+
+        $mime = TwilioWhatsAppPayload::firstMediaContentType($request);
+
+        return $this->audioTranscription->transcribeHostedMedia($url, $mime);
+    }
+
+    public function processMessage(string $from, string $message, ?string $customerPhoneE164 = null): string
     {
         $agent = new SalesAgent;
 
@@ -56,7 +86,18 @@ class WhatsAppService
 
         $agent->continueLastConversation($user);
 
-        $response = $agent->prompt($message);
+        $prompt = $message;
+        if ($customerPhoneE164 !== null && $customerPhoneE164 !== '') {
+            $prompt = <<<TXT
+[Datos automáticos del chat de WhatsApp]
+Número de teléfono del cliente en este chat: {$customerPhoneE164}
+Úselo como \`phone_number\` en CreateOrder después de confirmar con el cliente que es correcto (si ya lo confirmó verbalmente igual a este número, no vuelva a pedírselo).
+
+{$message}
+TXT;
+        }
+
+        $response = $agent->prompt($prompt);
 
         return $response->text;
     }

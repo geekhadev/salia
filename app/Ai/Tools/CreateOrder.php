@@ -12,12 +12,12 @@ class CreateOrder implements Tool
 {
     public function description(): Stringable|string
     {
-        return 'Creates a new order in the system with shipping data and line items. Call ONLY after you have every required field from the customer (full name, phone, address parts, confirmed products with quantities/prices—typically from ListProducts). Do not call for simple menu or price questions.';
+        return 'Creates a new order in the system with shipping data and line items. Call ONLY after you have every required field from the customer (full name, phone, address parts, confirmed products with quantities/prices—typically from ListProducts). Optional `location` stores GPS coordinates when the customer shared a live location pin for delivery. Do not call for simple menu or price questions.';
     }
 
     public function handle(Request $request): Stringable|string
     {
-        $order = Order::create([
+        $attributes = [
             'full_name' => $request['full_name'],
             'phone_number' => $request['phone_number'],
             'products' => $request['products'],
@@ -25,7 +25,16 @@ class CreateOrder implements Tool
             'address_city' => $request['address_city'],
             'address_neighborhood' => $request['address_neighborhood'],
             'address_street' => $request['address_street'],
-        ]);
+        ];
+
+        if ($request->has('location') && is_array($request['location'])) {
+            $attributes['location'] = [
+                'latitude' => (float) $request['location']['latitude'],
+                'longitude' => (float) $request['location']['longitude'],
+            ];
+        }
+
+        $order = Order::create($attributes);
 
         return json_encode([
             'status' => 'success',
@@ -53,6 +62,10 @@ class CreateOrder implements Tool
             'address_city' => $schema->string()->required(),
             'address_neighborhood' => $schema->string()->required(),
             'address_street' => $schema->string()->required(),
+            'location' => $schema->object(fn ($schema) => [
+                'latitude' => $schema->number()->required(),
+                'longitude' => $schema->number()->required(),
+            ])->nullable(),
         ];
     }
 }
