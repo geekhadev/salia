@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Services\WhatsAppService;
 use App\Support\TwilioWhatsAppPayload;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class WhatsAppWebhookController extends Controller
 {
