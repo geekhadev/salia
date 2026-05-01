@@ -15,7 +15,13 @@ class ListProducts implements Tool
      */
     public function description(): Stringable|string
     {
-        return 'Returns a list of available products in the burger restaurant.';
+        return <<<'DESC'
+Reads the real product catalog from the restaurant database (names, descriptions, prices).
+
+You MUST call this tool in the same assistant turn when the customer asks for: menu, carta, catálogo, lista de productos, precios, what you sell, what is available to eat, options, burgers, "dame el menú", "quiero ver qué hay", or similar—including vague hunger ("quiero comer") if they need to see what you offer.
+
+Never invent dishes or prices: if you need concrete products or amounts, call ListProducts first, then answer using that data (you may summarize warmly for WhatsApp).
+DESC;
     }
 
     /**

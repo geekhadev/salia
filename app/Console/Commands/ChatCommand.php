@@ -4,11 +4,12 @@ namespace App\Console\Commands;
 
 use App\Ai\Agents\SalesAgent;
 use Illuminate\Console\Command;
+
 use function Laravel\Prompts\text;
 
 class ChatCommand extends Command
 {
-    protected $signature = 'chat';
+    protected $signature = 'chat {--fresh : Start a new conversation instead of continuing the last one}';
 
     protected $description = 'Start an interactive chat session with the AI agent';
 
@@ -19,7 +20,11 @@ class ChatCommand extends Command
         $this->info('╚══════════════════════════════════════╝');
         $this->newLine();
 
-        $agent = SalesAgent::make();
+        $user = (object) ['id' => 'cli-chat'];
+
+        $agent = $this->option('fresh')
+            ? SalesAgent::make()->forUser($user)
+            : SalesAgent::make()->continueLastConversation($user);
 
         while (true) {
             $message = text(
@@ -42,10 +47,10 @@ class ChatCommand extends Command
             try {
                 $response = $agent->prompt($message);
                 $this->newLine();
-                $this->line('<fg=cyan>▌ ' . $response->text . '</>');
+                $this->line('<fg=cyan>▌ '.$response->text.'</>');
                 $this->newLine();
             } catch (\Exception $e) {
-                $this->error('Error: ' . $e->getMessage());
+                $this->error('Error: '.$e->getMessage());
                 $this->newLine();
             }
         }

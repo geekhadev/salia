@@ -12,7 +12,7 @@ class CloseOrder implements Tool
 {
     public function description(): Stringable|string
     {
-        return 'Closes and confirms an order after the customer has provided all required information. Use this tool when the customer confirms they want to finalize their order.';
+        return 'Marks an existing order as closed/confirmed in the system. Use only after CreateOrder returned an order_id and the customer clearly wants to finalize; not for catalog or menu requests.';
     }
 
     public function handle(Request $request): Stringable|string

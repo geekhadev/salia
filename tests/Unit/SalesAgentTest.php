@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use App\Ai\Agents\SalesAgent;
 use Illuminate\Support\Facades\File;
+use Laravel\Ai\Contracts\Conversational;
 use Tests\TestCase;
 
 class SalesAgentTest extends TestCase
@@ -15,6 +16,9 @@ class SalesAgentTest extends TestCase
         $this->assertFileExists($path);
 
         $agent = new SalesAgent;
+
+        $this->assertInstanceOf(Conversational::class, $agent);
+
         $instructions = (string) $agent->instructions();
 
         $this->assertNotSame('', trim($instructions));

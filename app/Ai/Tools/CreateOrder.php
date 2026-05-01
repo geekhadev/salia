@@ -12,7 +12,7 @@ class CreateOrder implements Tool
 {
     public function description(): Stringable|string
     {
-        return 'Creates a new order with customer details and product list. Use this tool ONLY when all required information has been collected from the customer.';
+        return 'Creates a new order in the system with shipping data and line items. Call ONLY after you have every required field from the customer (full name, phone, address parts, confirmed products with quantities/prices—typically from ListProducts). Do not call for simple menu or price questions.';
     }
 
     public function handle(Request $request): Stringable|string
