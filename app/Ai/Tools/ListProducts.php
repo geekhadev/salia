@@ -29,14 +29,17 @@ DESC;
      */
     public function handle(Request $request): Stringable|string
     {
-        $products = Product::all()->map(function ($product) {
-            return [
-                'id' => $product->id,
-                'name' => $product->name,
-                'description' => $product->description,
-                'price' => $product->price,
-            ];
-        });
+        $products = Product::all()
+            ->unique('name')
+            ->values()
+            ->map(function ($product) {
+                return [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'description' => $product->description,
+                    'price' => $product->price,
+                ];
+            });
 
         return json_encode($products, JSON_PRETTY_PRINT);
     }
