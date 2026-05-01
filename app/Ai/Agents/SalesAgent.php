@@ -8,12 +8,10 @@ use App\Ai\Tools\ListProducts;
 use Illuminate\Support\Facades\File;
 use Laravel\Ai\Concerns\RemembersConversations;
 use Laravel\Ai\Contracts\Agent;
-use Laravel\Ai\Contracts\Conversational;
-use Laravel\Ai\Contracts\HasTools;
 use Laravel\Ai\Promptable;
 use Stringable;
 
-class SalesAgent implements Agent, Conversational, HasTools
+class SalesAgent implements Agent
 {
     use Promptable, RemembersConversations;
 

@@ -58,16 +58,7 @@ class WhatsAppService
 
         $response = $agent->prompt($message);
 
-        $lastOrder = $this->getLastOrderForSession($from);
-
-        return $response->content();
-    }
-
-    protected function getLastOrderForSession(string $from): ?Order
-    {
-        return Order::where('phone_number', $from)
-            ->latest()
-            ->first();
+        return $response->text;
     }
 
     public function closeOrder(int $orderId): Order
