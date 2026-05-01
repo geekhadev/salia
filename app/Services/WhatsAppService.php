@@ -9,6 +9,7 @@ use Twilio\Rest\Client;
 class WhatsAppService
 {
     protected Client $twilio;
+
     protected string $fromNumber;
 
     public function __construct()
@@ -17,18 +18,34 @@ class WhatsAppService
             config('services.twilio.account_sid'),
             config('services.twilio.auth_token')
         );
-        $this->fromNumber = 'whatsapp:' . config('services.twilio.whatsapp_number');
+        $this->fromNumber = 'whatsapp:'.config('services.twilio.whatsapp_number');
     }
 
     public function sendMessage(string $to, string $message): void
     {
+        $toAddress = $this->normalizeWhatsAppRecipient($to);
+
         $this->twilio->messages->create(
-            'whatsapp:' . $to,
+            $toAddress,
             [
                 'from' => $this->fromNumber,
                 'body' => $message,
             ]
         );
+    }
+
+    /**
+     * Twilio inbound `From` values look like `whatsapp:+E164`; avoid duplicating the `whatsapp:` prefix.
+     */
+    protected function normalizeWhatsAppRecipient(string $to): string
+    {
+        if (str_starts_with($to, 'whatsapp:')) {
+            return $to;
+        }
+
+        $digits = preg_replace('/\D+/', '', $to) ?? '';
+
+        return 'whatsapp:+'.ltrim($digits, '+');
     }
 
     public function processMessage(string $from, string $message): string
