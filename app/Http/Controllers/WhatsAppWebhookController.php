@@ -21,6 +21,8 @@ class WhatsAppWebhookController extends Controller
             return response('Missing sender (From or WaId)', 400);
         }
 
+        Log::info($body);
+
         $response = $this->whatsappService->processMessage($from, $body);
 
         $this->whatsappService->sendMessage($from, $response);
