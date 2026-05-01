@@ -2,6 +2,7 @@
 
 namespace App\Ai\Tools;
 
+use App\Models\Product;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Tools\Request;
@@ -14,7 +15,7 @@ class ListProducts implements Tool
      */
     public function description(): Stringable|string
     {
-        return 'A description of the tool.';
+        return 'Returns a list of available products in the burger restaurant.';
     }
 
     /**
@@ -22,7 +23,16 @@ class ListProducts implements Tool
      */
     public function handle(Request $request): Stringable|string
     {
-        //
+        $products = Product::all()->map(function ($product) {
+            return [
+                'id' => $product->id,
+                'name' => $product->name,
+                'description' => $product->description,
+                'price' => $product->price,
+            ];
+        });
+
+        return json_encode($products, JSON_PRETTY_PRINT);
     }
 
     /**
@@ -30,8 +40,6 @@ class ListProducts implements Tool
      */
     public function schema(JsonSchema $schema): array
     {
-        return [
-            'value' => $schema->string()->required(),
-        ];
+        return [];
     }
 }

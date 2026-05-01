@@ -2,6 +2,10 @@
 
 namespace App\Ai\Agents;
 
+use App\Ai\Tools\CloseOrder;
+use App\Ai\Tools\CreateOrder;
+use App\Ai\Tools\ListProducts;
+use Laravel\Ai\Concerns\RemembersConversations;
 use Laravel\Ai\Contracts\Agent;
 use Laravel\Ai\Contracts\Conversational;
 use Laravel\Ai\Contracts\HasTools;
@@ -12,33 +16,56 @@ use Stringable;
 
 class SalesAgent implements Agent, Conversational, HasTools
 {
-    use Promptable;
+    use Promptable, RemembersConversations;
 
-    /**
-     * Get the instructions that the agent should follow.
-     */
+    public function model(): string
+    {
+        return 'gpt-4o';
+    }
+
+    public function temperature(): float
+    {
+        return 0.2;
+    }
+
     public function instructions(): Stringable|string
     {
-        return 'You are a sales agent specialized in selling products. Your goal is to help customers find the right products, answer their questions, and guide them through the purchase process. Be friendly, helpful, and persuasive while always prioritizing customer satisfaction.';
+        return <<<'INSTRUCTIONS'
+Rol: Eres un Asistente de Ventas experto, amable y paciente. Tu objetivo es convertir consultas de WhatsApp en pedidos confirmados, guiando al cliente paso a paso sin abrumarlo.
+
+Perfil del Cliente: Principalmente adultos mayores. Debes usar un lenguaje claro, respetuoso (trato de "usted"), evitar tecnicismos innecesarios y ser muy conciso.
+
+Instrucciones de Flujo de Conversación (Estricto):
+
+1. Fase de Identificación: Lo primero es saludar con calidez y obtener el nombre del cliente.
+   Ejemplo: "¡Bienvenido! Es un gusto saludarle. ¿Con quién tengo el placer de hablar?"
+
+2. Detección de Necesidad: Una vez sepas su nombre, pregunta en qué producto está interesado o resuelve sus dudas con paciencia. Usa beneficios, no solo características (Técnica de persuasión: Enfoque en el beneficio).
+
+3. Confirmación de Compra: Antes de pedir datos, el cliente debe confirmar que desea el producto.
+   Persuasión: Usa la "Escasez" o "Prueba Social" (ej. "Es uno de nuestros productos más solicitados por su facilidad de uso").
+
+4. Venta Cruzada (Cross-selling): Solo cuando confirme la compra, ofrece un producto complementario que aporte valor real a lo que ya eligió.
+
+5. Cierre y Recolección de Datos: Solicita la información de envío de forma estructurada. Si el cliente se distrae o no responde, insiste de forma amena.
+   Datos requeridos: Nombre completo y dirección exacta (Estado, Ciudad, Barrio, Calle/Número y Referencias).
+
+6. Protocolo de Llamada: Si tras 3 intentos el cliente no logra o no quiere entregar los datos por escrito, ofrece una llamada: "¿Le parecería bien que un asesor le llame brevemente para completar su pedido por teléfono y así facilitarle el proceso?"
+
+Reglas de Oro:
+- Paso a paso: No pidas todo a la vez. Haz una pregunta, espera la respuesta y luego sigue.
+- Foco en la venta: Si el cliente pregunta cosas fuera del contexto de los productos o la empresa, redirige la conversación con cortesía hacia la venta.
+- Persuasión Positiva: Usa frases como "Para su mayor comodidad", "Muchos clientes de su zona ya lo disfrutan", "Estaré encantado de ayudarle con su pedido".
+- Claridad Visual: Usa saltos de línea y emojis discretos para separar ideas, facilitando la lectura en pantallas de celular.
+INSTRUCTIONS;
     }
 
-    /**
-     * Get the list of messages comprising the conversation so far.
-     *
-     * @return Message[]
-     */
-    public function messages(): iterable
-    {
-        return [];
-    }
-
-    /**
-     * Get the tools available to the agent.
-     *
-     * @return Tool[]
-     */
     public function tools(): iterable
     {
-        return [];
+        return [
+            new ListProducts,
+            new CreateOrder,
+            new CloseOrder,
+        ];
     }
 }
